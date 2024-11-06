@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Category News Finder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 40px;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: right;
+            margin-bottom: 30px;
+        }
+
+        form {
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            margin-bottom: 10px;
+            width: 55%;
+        }
+
+        input[type="submit"], #clear-button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        #clear-button {
+            background-color: #f44336;
+        }
+
+        #results {
+            margin-top: 20px;
+        }
+
+        .news-item {
+            background-color: #f0f0f0;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
+        h3 {
+            margin-top: 0;
+        }
+
+        p {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Category News Finder</h1>
+
+    <form id="prediction-form">
+        <label for="City">Country :</label>
+        <input type="text" placeholder="Enter City Name" id="City" name="City"><br><br>
+        <label for="news_cat">Keyword</label>
+        <input type="text" placeholder="Enter Category Name" id="news_cat" name="news_cat"><br><br>
+        <input type="submit" value="Search">
+        <button type="button" id="clear-button">Clear Output</button>
+    </form>
+
+    <div id="results"></div>
+
+    <script>
+        document.getElementById('prediction-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            var city = document.getElementById('City').value;
+            var newsCat = document.getElementById('news_cat').value;
+
+            fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({
+                    'City': city,
+                    'news_cat': newsCat
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                var resultsDiv = document.getElementById('results');
+                resultsDiv.innerHTML = '';
+
+                if (data.News && data.News.length > 0) {
+                    data.News.forEach(function(newsItem) {
+                        var newsElement = document.createElement('div');
+                        newsElement.className = 'news-item';
+                        newsElement.innerHTML = `
+                            <h3><a href="${newsItem.url}" target="_blank">${newsItem.title}</a></h3>
+                            <p>Publisher: ${newsItem.publisher}</p>
+                            <p>Published Date: ${newsItem.published_date}</p>
+                        `;
+                        resultsDiv.appendChild(newsElement);
+                    });
+                } else {
+                    resultsDiv.innerHTML = 'No results found.';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('results').innerHTML = 'An error occurred while fetching news. Please try again later.';
+            });
+        });
+
+        // Clear Output button functionality
+        document.getElementById('clear-button').addEventListener('click', function() {
+            document.getElementById('results').innerHTML = '';
+        });
+    </script>
+</body>
+</html>
